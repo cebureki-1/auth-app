@@ -1,31 +1,28 @@
+// middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
+const pool = require("../config/db");
 
-dotenv.config();
-
-function authenticateJwt(req, res, next) {
-  let token = req.header("Authorization");
+const protect = async (req, res, next) => {
+  let token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    return res
-      .status(401)
-      .json({ message: "Access denied, No token provided" });
+    return res.status(401).json({ message: "Нет токена, доступ запрещен" });
   }
 
   try {
-    const secret = process.env.JWT_SECRET;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [decoded.id]);
 
-    token = token?.split(" ")[1];
+    if (!userResult.rows.length) {
+      return res.status(401).json({ message: "Пользователь не найден" });
+    }
 
-    const decoded = jwt.verify(token, secret);
-
-    req.username = decoded;
-
+    req.user = userResult.rows[0]; // сохраняем user в req.user
     next();
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ message: "Invalid Token" });
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ message: "Неверный токен" });
   }
-}
+};
 
-module.exports = { authenticateJwt };
+module.exports = protect;
