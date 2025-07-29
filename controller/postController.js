@@ -1,21 +1,23 @@
 const pool = require("../config/db");
-const path = require("path");
 
 exports.createPost = async (req, res) => {
-  const { title, content } = req.body;
+
+  const { title, content, anonymous } = req.body;
   const image = req.file ? req.file.filename : null;
-console.log("dsdsdds");
+  const user_id = req.user.id;
+
   try {
-    
-    
     const result = await pool.query(
-      "INSERT INTO posts (title, content, image) VALUES ($1, $2, $3) RETURNING *",
-      [title, content, image]
+      `INSERT INTO posts (title, content, image, user_id, anonymous)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [title, content, image, user_id, anonymous]
     );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Сервер қатесі" });
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Ошибка при создании поста:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
   }
 };
 
@@ -28,15 +30,33 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
+
 exports.getPostById = async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query("SELECT * FROM posts WHERE id = $1", [id]);
+    const result = await pool.query(`
+      SELECT posts.*, users.username 
+      FROM posts 
+      LEFT JOIN users ON posts.user_id = users.id 
+      WHERE posts.id = $1
+    `, [id]);
+
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Пост табылмады" });
     }
-    res.json(result.rows[0]);
+
+    const post = result.rows[0];
+
+    // Если пост анонимный, не отправляем имя
+    if (post.anonymous) {
+      post.username = null;
+    }
+
+    res.json(post);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Сервер қатесі" });
   }
 };
+
+
