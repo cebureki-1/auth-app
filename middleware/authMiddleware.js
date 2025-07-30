@@ -21,7 +21,6 @@ const protect = async (req, res, next) => {
     next();
   } catch (err) {
     console.error(err);
-    localStorage.clear();
     res.status(401).json({ message: "Неверный токен" });
   }
 };

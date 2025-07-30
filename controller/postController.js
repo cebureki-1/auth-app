@@ -3,16 +3,17 @@ const pool = require("../config/db");
 exports.createPost = async (req, res) => {
 
   const { title, content, anonymous } = req.body;
-  const image = req.file ? req.file.filename : null;
+  const image = req.file ? req.file.filename : "image.png"; 
   const user_id = req.user.id;
 
   try {
-    const result = await pool.query(
-      `INSERT INTO posts (title, content, image, user_id, anonymous)
-       VALUES ($1, $2, $3, $4, $5)
+    
+      const result = await pool.query(
+        `INSERT INTO posts (title, content,  image,user_id, anonymous)
+       VALUES ($1, $2, $3 ,$4, $5)
        RETURNING *`,
-      [title, content, image, user_id, anonymous]
-    );
+        [title, content, image, user_id, anonymous]
+      );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {

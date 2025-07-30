@@ -2,8 +2,9 @@ const pool = require("../config/db");
 
 // Получение профиля
 const getProfile = async (req, res) => {
-  const userId = req.user.id;
-  const result = await pool.query("SELECT id, username, email, name FROM users WHERE id = $1", [userId]);
+  const userId = req.user.id; 
+  
+  const result = await pool.query("SELECT id, username, email, avatar FROM users WHERE id = $1", [userId]);
   res.json(result.rows[0]);
 };
 

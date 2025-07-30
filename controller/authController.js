@@ -4,14 +4,18 @@ const pool = require("../config/db");
 
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
-  const avatar = req.file?.filename;
+  const avatar = req.file?.filename || "image.png";
 
   // ✅ Исправлено: было name, теперь username
-  if (!username || !email || !password || !avatar) {
+  if (!username || !email || !password) {
     return res.status(400).json({ message: "Все поля обязательны." });
   }
 
   try {
+    const usernameExists = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+    if (usernameExists.rows.length > 0) {
+      return res.status(400).json({ message: "Имя пользователя уже занято." });
+    }
     const userExists = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (userExists.rows.length > 0) {
       return res.status(400).json({ message: "Пользователь уже существует." });
@@ -55,7 +59,7 @@ exports.loginUser = async (req, res) => {
 
     res.json({
       id: user.id,
-      name: user.username, 
+      name: user.username,
       email: user.email,
       avatar: user.avatar,
       token,
