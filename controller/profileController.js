@@ -17,6 +17,7 @@ const updateProfile = async (req, res) => {
     "UPDATE users SET username = $1, email = $2, name = $3 WHERE id = $4",
     [username, email, name, userId]
   );
+  
   res.json({ message: "Профиль обновлён" });
 };
 
@@ -24,22 +25,14 @@ const updateProfile = async (req, res) => {
 const getMyPosts = async (req, res) => {
   const userId = req.user.id;
   const result = await pool.query("SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC", [userId]);
+  
   res.json(result.rows);
 };
 
-// Удаление аккаунта
-const deleteAccount = async (req, res) => {
-  const userId = req.user.id;
 
-  await pool.query("DELETE FROM posts WHERE user_id = $1", [userId]);
-  await pool.query("DELETE FROM users WHERE id = $1", [userId]);
-
-  res.json({ message: "Аккаунт удалён" });
-};
 
 module.exports = {
   getProfile,
   updateProfile,
-  getMyPosts,
-  deleteAccount,
+  getMyPosts
 };

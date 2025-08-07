@@ -5,7 +5,7 @@ const {
   getProfile,
   updateProfile,
   getMyPosts,
-  deleteAccount,
+  deletepost,
 } = require("../controller/profileController");
 
 // Получить инфо о себе
@@ -17,7 +17,6 @@ router.put("/", authMiddleware, updateProfile);
 // Получить только свои посты
 router.get("/posts", authMiddleware, getMyPosts);
 
-// Удалить аккаунт
-router.delete("/", authMiddleware, deleteAccount);
+// Удалить поста
 
 module.exports = router;

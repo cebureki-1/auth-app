@@ -1,12 +1,11 @@
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
-  const avatar = req.file?.filename || "image.png";
-
-  // ✅ Исправлено: было name, теперь username
+  const avatar = req.file ? req.file.filename : "image.png";
+  
   if (!username || !email || !password) {
     return res.status(400).json({ message: "Все поля обязательны." });
   }
@@ -29,14 +28,13 @@ exports.registerUser = async (req, res) => {
     );
 
     const user = result.rows[0];
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "30d" });
-
+   
     res.status(201).json({
       id: user.id,
       name: user.username, // ✅ Исправлено: user.username вместо user.name
       email: user.email,
       avatar: user.avatar,
-      token,
+
     });
   } catch (err) {
     console.error(err);
@@ -50,7 +48,7 @@ exports.loginUser = async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     const user = result.rows[0];
-
+    
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: "Неверный email или пароль." });
     }
